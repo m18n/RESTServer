@@ -8,8 +8,9 @@ web_server(){
     controller::sl=&serv;
 }
 void start_server(int port){
-    serv.conn.on();
     web_api.port(port).run();
+    serv.conn.on();
+    
 }
 void set_name_server(std::string name){
     serv.tasker.name_server=name;
