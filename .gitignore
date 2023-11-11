@@ -1,0 +1,4 @@
+.vs
+build/linux/x64/Debug/*
+lib/*
+tdlib/*
