@@ -1,6 +1,6 @@
 #include"tasker_manager.h"
 // };
-bool isPortOccupied(int port) {
+bool server::isPortOccupied(int port) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         std::cerr << "Error creating socket" << std::endl;
@@ -24,7 +24,7 @@ bool isPortOccupied(int port) {
         return true;
     }
 }
-std::string sha256(const std::string& input) {
+std::string server::sha256(const std::string& input) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
@@ -38,7 +38,7 @@ std::string sha256(const std::string& input) {
 
     return ss.str();
 }
-void init_event(event* ev){
+void server::init_event(event* ev){
     ev->hash_worker="";
     ev->hash_event="";
     ev->busy=false;
@@ -46,7 +46,7 @@ void init_event(event* ev){
     ev->count_restart=0;
     ev->process=false;
 }
-void init_client(client* cl){
+void server::init_client(client* cl){
     cl->hash_worker="";
     cl->group="";
     cl->busy=false;

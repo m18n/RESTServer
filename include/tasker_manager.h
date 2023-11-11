@@ -11,6 +11,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+namespace server{
 using t_json = nlohmann::json;
 
 // namespace servers{
@@ -456,3 +457,4 @@ private:
 //     std::vector<data_telegram> telegrams;
 // };
 // }
+}
