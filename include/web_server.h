@@ -11,6 +11,10 @@ void start_server(int port){
     serv.conn.on();
     web_api.port(port).run();
 }
+void set_name_server(std::string name){
+    serv.tasker.name_server=name;
+    serv.conn.name_client=name;
+}
 void stop_server(){
     serv.conn.off();
     web_api.stop();

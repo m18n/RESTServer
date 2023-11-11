@@ -1,7 +1,4 @@
 #pragma once
-#ifndef NAME_SERVER
-#define NAME_SERVER "tasker"
-#endif
 #include <iostream>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -302,11 +299,12 @@ private:
     }
 
 public:
+    std::string name_server="tasker";
     tasker_manager()
     {
         server_hash = gethash();
         last_check_client=time(nullptr);
-        std::cout<<"NAME SERVER: "<<NAME_SERVER<<"\n";
+        std::cout<<"NAME SERVER: "<<name_server<<"\n";
     }
 
     ~tasker_manager()
@@ -411,7 +409,7 @@ public:
         std::cout << "LIST: " << ev.json["meta"]["$list_servers"].dump() << "\n";
         for (int i = 0; i < size_list; i++)
         {
-            if (ev.json["meta"]["$list_servers"][i]["name"] == NAME_SERVER)
+            if (ev.json["meta"]["$list_servers"][i]["name"] == name_server)
             {
                 int n = i;
                 if (i + 1 != size_list)
