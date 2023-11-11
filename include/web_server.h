@@ -15,8 +15,8 @@ void stop_server(){
     serv.conn.off();
     web_api.stop();
 }
-void add_conn_server(std::string port){
-    serv.conn.add_connection(port);
+void add_conn_server(std::string ip){
+    serv.conn.add_connection(ip);
 }
 
 private:

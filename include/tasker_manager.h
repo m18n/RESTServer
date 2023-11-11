@@ -1,5 +1,7 @@
 #pragma once
+#ifndef NAME_SERVER
 #define NAME_SERVER "tasker"
+#endif
 #include <iostream>
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -274,17 +276,7 @@ private:
 class tasker_manager
 {
 private:
-    int find_group(std::string group)
-    {
-        for (int i = 0; i < clients_group.size(); i++)
-        {
-            if (clients_group[i].get_group() == group)
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
+    
     std::string gethash()
     {
 
@@ -299,10 +291,22 @@ public:
     {
         server_hash = gethash();
         last_check_client=time(nullptr);
+        std::cout<<"NAME SERVER: "<<NAME_SERVER<<"\n";
     }
 
     ~tasker_manager()
     {
+    }
+    int find_group(std::string group)
+    {
+        for (int i = 0; i < clients_group.size(); i++)
+        {
+            if (clients_group[i].get_group() == group)
+            {
+                return i;
+            }
+        }
+        return -1;
     }
     std::string get_server_hash()
     {

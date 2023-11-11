@@ -1,4 +1,4 @@
-#include "controller.h"
+#include "include/controller.h"
 //logintg* controller::tg;
 server::server_logic* controller::sl;
 // void controller::telegram::get_auth_code(crow::request &req,
@@ -40,7 +40,7 @@ void controller::send_event(crow::request& req, crow::response& res,std::string 
     server::t_json respon;
     server::event ev;
     ev.json=server::t_json::parse(req.body);
-    ev.json["$server_hash"]=server_hash;
+    ev.json["meta"]["$server_hash"]=server_hash;
     respon["$respon_id"]=sl->tasker.add_new_event(ev);
     
     res.body=respon.dump();
