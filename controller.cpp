@@ -46,10 +46,15 @@ void controller::send_event(crow::request& req, crow::response& res,std::string 
     res.body=respon.dump();
     res.end();
 }
+
 void controller::start_event(crow::request& req, crow::response& res,std::string server_hash,std::string group,std::string hash_worker,std::string event_id){
     res.body=sl->tasker.start_event(group,hash_worker,event_id).dump();
     res.end();
 }  
+void controller::clear_event(crow::request& req, crow::response& res,std::string server_hash,std::string group,std::string hash_worker,std::string event_id){
+    res.body=sl->tasker.clear_event(group,hash_worker,event_id).dump();
+    res.end();
+}
     void controller::end_event(crow::request& req, crow::response& res,std::string server_hash,std::string group,std::string hash_worker,std::string event_id){
         res.body=sl->tasker.end_event(group,event_id).dump();
          res.end();

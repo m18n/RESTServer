@@ -9,6 +9,8 @@ void url::init_api_url(crow::SimpleApp &app) {
   ([]( crow::request &req, crow::response &res,std::string server_hash,std::string group,std::string hash_id)  { controller::send_event(req,res,server_hash,group,hash_id); });
     CROW_ROUTE(app, "/api/send/<string>/<string>/command/<string>/event/start/<string>")
   ([]( crow::request &req, crow::response &res,std::string server_hash,std::string group,std::string hash_id,std::string event_id)  { controller::start_event(req,res,server_hash,group,hash_id,event_id); });
+      CROW_ROUTE(app, "/api/send/<string>/<string>/command/<string>/event/clear/<string>")
+  ([]( crow::request &req, crow::response &res,std::string server_hash,std::string group,std::string hash_id,std::string event_id)  { controller::clear_event(req,res,server_hash,group,hash_id,event_id); });
       CROW_ROUTE(app, "/api/send/<string>/<string>/command/<string>/event/finish/<string>")
   ([]( crow::request &req, crow::response &res,std::string server_hash,std::string group,std::string hash_id,std::string event_id)  { controller::end_event(req,res,server_hash,group,hash_id,event_id); });
   CROW_ROUTE(app, "/api/client/<string>/getid").methods("POST"_method)

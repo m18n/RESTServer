@@ -1,4 +1,5 @@
 #include "include/server_logic.h"
+server::tasker_manager *server::tm_local = NULL;
 void server::handle_transfer(connector::connector_manager *conn_m,
                              t_json json) {
   std::string group;
@@ -11,12 +12,22 @@ void server::handle_transfer(connector::connector_manager *conn_m,
       group = json["meta"]["$list_servers"][n]["name"];
     }
   }
-  int index = tasker->find_group(group);
+  int index = tm_local->find_group(group);
   if (index == -1)
     return;
+  event ev;
+  ev.json = json;
   if (conn_m->start_event(json) == 0) {
-
-    conn_m->end_event(json);
+    int res = tm_local->add_new_event(ev);
+    if (res == -1) {
+      int res = -1;
+      while (res != 0) {
+        res = conn_m->clear_event(json);
+      }
+    } else {
+      conn_m->end_event(json);
+    }
   }
+
   std::cout << "TRANSFER JSON: " << json.dump() << "\n";
 }

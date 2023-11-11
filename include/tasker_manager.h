@@ -163,6 +163,21 @@ public:
         }
         return -3;
     }
+    int clear_event(std::string hash_worker,std::string event_id)
+    {
+
+        for (int i = 0; i < events.size(); i++)
+        {
+            if (events[i].hash_event == event_id)
+            {
+                if (events[i].process == true){
+                    events[i].process=false;
+                }
+                return 0;
+            }
+        }
+        return -2;
+    }
     int end_event(std::string event_id)
     {
         for (int i = 0; i < events.size(); i++)
@@ -360,6 +375,18 @@ public:
         if (index != -1)
         {
             int s = clients_group[index].start_event(hash_worker,event_id);
+            res["$status"] = s;
+        }
+        return res;
+    }
+     t_json clear_event(std::string group,std::string hash_worker, std::string event_id)
+    {
+        t_json res;
+        res["$status"] = -1;
+        int index = find_group(group);
+        if (index != -1)
+        {
+            int s = clients_group[index].clear_event(hash_worker,event_id);
             res["$status"] = s;
         }
         return res;
