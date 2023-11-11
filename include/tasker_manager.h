@@ -304,7 +304,7 @@ public:
     {
         server_hash = gethash();
         last_check_client=time(nullptr);
-        std::cout<<"NAME SERVER: "<<name_server<<"\n";
+        
     }
 
     ~tasker_manager()
