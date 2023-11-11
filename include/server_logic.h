@@ -2,7 +2,7 @@
 #include"tasker_manager.h"
 #include"connector_manager.h"
 namespace server{
-extern tasker_manager tasker;
+static tasker_manager tasker;
 void handle_transfer(connector::connector_manager* conn_m,t_json json);
 class server_logic{
 public:
