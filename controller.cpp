@@ -40,7 +40,9 @@ void controller::send_event(crow::request& req, crow::response& res,std::string 
     server::t_json respon;
     server::event ev;
     ev.json=server::t_json::parse(req.body);
-    ev.json["meta"]["$server_hash"]=server_hash;
+    if(!ev.json["meta"].contains("$server_hash")){
+        ev.json["meta"]["$server_hash"]=server_hash;
+    }
     respon["$respon_id"]=sl->tasker.add_new_event(ev);
     
     res.body=respon.dump();
