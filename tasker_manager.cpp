@@ -1,5 +1,10 @@
 #include "include/tasker_manager.h"
 // };
+static server::Logger serv_log_empty;
+server::Logger* server::server_log=&serv_log_empty;
+void server::init_logg_server(Logger* log){
+  server_log=log;
+}
 void server::mutex_n::lock() {
   if (n == 0) {
    

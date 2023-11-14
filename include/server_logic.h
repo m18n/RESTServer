@@ -9,10 +9,10 @@ public:
     tasker_manager tasker;
     connector::connector_manager conn;
     connector::Logger log_conn;
+    server::Logger log_serv;
 public:
     server_logic(){
         server::tm_local=&this->tasker;
-        connector::init_logg_connector(&log_conn);
         conn.set_transfer(handle_transfer);
     }
     

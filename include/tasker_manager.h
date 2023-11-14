@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include<mutex>
+#include <fstream>
 namespace server{
 using t_json = nlohmann::json;
 
@@ -92,11 +93,123 @@ private:
     mutex_n* m;
     bool b;
 };
+struct file {
+  std::ofstream file;
+  std::string name_file;
+};
+class Logger {
+private:
+  std::vector<file> logFiles;
+  std::string currentfile;
+  mutex_n mt;
+  std::string getCurrentTime() {
+    std::time_t currentTime = std::time(nullptr);
+    char *timeString = std::ctime(&currentTime);
+    timeString[std::strlen(timeString) - 1] =
+        '\0'; // Видаляємо символ нового рядка \n
+    return std::string(timeString);
+  }
+
+public:
+  Logger() {
+    
+  }
+  void close_file(file *file) {
+    scope_lock_mutex s_mt(&mt);
+    if (file->file.is_open()) {
+      file->file.close();
+    }
+  }
+  void delete_file(std::string filename) {
+    scope_lock_mutex s_mt(&mt);
+    for (int i = 0; i < logFiles.size(); i++) {
+      if (logFiles[i].name_file == filename) {
+        close_file(&logFiles[i]);
+        logFiles.erase(logFiles.begin() + i);
+        break;
+      }
+    }
+  }
+  int find_file(std::string filename) {
+    scope_lock_mutex s_mt(&mt);
+    for (int i = 0; i < logFiles.size(); i++) {
+      if (logFiles[i].name_file == filename) {
+        return i;
+      }
+    }
+    return -1;
+  }
+  void set_current_file(std::string filename) {
+    scope_lock_mutex s_mt(&mt);
+    this->currentfile = filename;
+  }
+  void add_file(std::string filename) {
+    scope_lock_mutex s_mt(&mt);
+    delete_file(filename);
+    file logFile;
+    logFile.name_file = filename;
+    logFile.file.open(filename,
+                      std::ios::out |
+                          std::ios::app); // Відкриваємо файл для логування
+                                          // (додаємо до вже існуючого)
+    if (!logFile.file.is_open()) {
+      exit(1);
+    }
+    this->currentfile=filename;
+    logFiles.push_back(std::move(logFile));
+  }
+  void log(std::string name_log, std::string message) {
+    scope_lock_mutex s_mt(&mt);
+    std::string time = getCurrentTime();
+    if(logFiles.size()==0){
+      std::cout << time << " - " << name_log << " - " << message
+                      << std::endl;
+      return;
+    }
+    int index = find_file(currentfile);
+    if (index == -1) {
+      exit(1);
+    }
+    if (logFiles[index].file.is_open()) {
+      
+      logFiles[index].file << time << " - " << name_log << " - " << message
+                      << std::endl; // Записуємо повідомлення з часом у файл
+    }
+  }
+  void log(std::string filename, std::string name_log, std::string message) {
+    scope_lock_mutex s_mt(&mt);
+    std::string time = getCurrentTime();
+    if(logFiles.size()==0){
+      std::cout << time << " - " << name_log << " - " << message
+                      << std::endl;
+      return;
+    }
+    int index = find_file(filename);
+    if (index == -1) {
+      exit(1);
+    }
+    if (logFiles[index].file.is_open()) {
+      
+      logFiles[index].file << time << " - " << name_log << " - " << message
+                      << std::endl; // Записуємо повідомлення з часом у файл
+    }
+  }
+  ~Logger() {
+    scope_lock_mutex s_mt(&mt);
+    for (int i = 0; i < logFiles.size(); i++) {
+      close_file(&logFiles[i]);
+    }
+  }
+};
+
+extern Logger* server_log;
+void init_logg_server(Logger* log);
 class group_clients
 {
 public:
     group_clients()
     {
+        server_log->log("group_clients|group_clients","START FUNCTION\n");
         scope_lock_mutex s_cl(&mt_client);
         scope_lock_mutex s_ev(&mt_event);
         scope_lock_mutex s_ri(&mt_respon_id);
@@ -110,6 +223,7 @@ public:
     }
       group_clients( group_clients& other)
     {
+        server_log->log("group_clients|group_clients(copy)","START FUNCTION\n");
         scope_lock_mutex s_cl(&other.mt_client);
         scope_lock_mutex s_ev(&other.mt_event);
         scope_lock_mutex s_ri(&other.mt_respon_id);
@@ -124,6 +238,7 @@ public:
     // Move constructor
     group_clients(group_clients&& other) noexcept
     {
+        server_log->log("group_clients|group_clients(move)","START FUNCTION\n");
         scope_lock_mutex s_cl(&other.mt_client);
         scope_lock_mutex s_ev(&other.mt_event);
         scope_lock_mutex s_ri(&other.mt_respon_id);
@@ -138,6 +253,7 @@ public:
     }
 private:
 std::string generate_hash_event(std::string strindex,std::string count_restart){
+    server_log->log("group_clients|generate_hash_event","START FUNCTION\n");
     std::string currentTime = std::to_string(time(nullptr));
     std::string mil=std::to_string(clock());
     
@@ -150,7 +266,7 @@ std::string generate_hash_event(std::string strindex,std::string count_restart){
 public:
     void set_group(std::string group)
     {
-        
+        server_log->log("group_clients|set_group","START FUNCTION\n");
         scope_lock_mutex s_var(&mt_var);
        
         this->group = group;
@@ -158,7 +274,7 @@ public:
     }
     void init(std::string server_hash)
     {
-        
+        server_log->log("group_clients|init","START FUNCTION\n");
         scope_lock_mutex s_var(&mt_var);
         
         this->server_hash = server_hash;
@@ -166,7 +282,7 @@ public:
     }
     std::string get_group()
     {
-        
+        server_log->log("group_clients|get_group","START FUNCTION\n");
         scope_lock_mutex s_var(&mt_var);
         
         std::string gr=group;
@@ -176,7 +292,7 @@ public:
 
     respon_id get_respon_id()
     {
-        
+        server_log->log("group_clients|get_respon_id","START FUNCTION\n");
         scope_lock_mutex s_ri(&mt_respon_id);
         
       
@@ -198,7 +314,7 @@ public:
     }
     void finish_respon_id(respon_id r)
     {
-       
+       server_log->log("group_clients|finish_respon_id","START FUNCTION\n");
         scope_lock_mutex s_ri(&mt_respon_id);
         
         if (r.id < ids.size())
@@ -209,6 +325,7 @@ public:
     }
     client get_new_client(std::string time, std::string ip)
     {
+        server_log->log("group_clients|get_new_client","START FUNCTION\n");
         scope_lock_mutex s_cl(&mt_client);
         
         client cl;
@@ -231,6 +348,7 @@ public:
     }
     void exit_client(std::string hash_worker)
     {
+        server_log->log("group_clients|exit_client","START FUNCTION\n");
         scope_lock_mutex s_cl(&mt_client);
        
       
@@ -258,6 +376,7 @@ public:
     }
     int start_event(std::string hash_worker,std::string event_id)
     {
+        server_log->log("group_clients|start_event","START FUNCTION\n");
         scope_lock_mutex s_ev(&mt_event);
         
         for (int i = 0; i < events.size(); i++)
@@ -278,7 +397,7 @@ public:
     }
     int clear_event(std::string hash_worker,std::string event_id)
     {
-        
+        server_log->log("group_clients|clear_event","START FUNCTION\n");
         scope_lock_mutex s_ev(&mt_event);
     
         for (int i = 0; i < events.size(); i++)
@@ -297,7 +416,7 @@ public:
     }
     int end_event(std::string event_id)
     {
-       
+       server_log->log("group_clients|end_event","START FUNCTION\n");
         scope_lock_mutex s_ev(&mt_event);
         
         for (int i = 0; i < events.size(); i++)
@@ -324,7 +443,7 @@ public:
     }
     int add_new_event(event ev, std::string server_hash)
     {
-       
+       server_log->log("group_clients|add_new_event","START FUNCTION\n");
         scope_lock_mutex s_ev(&mt_event);
         
        
@@ -354,6 +473,7 @@ public:
         return -2;
     }
     void ping_client(){
+        server_log->log("group_clients|ping_client","START FUNCTION\n");
         scope_lock_mutex s_cl(&mt_client);
         
         for (int i = 0; i < clients.size(); i++)
@@ -371,6 +491,7 @@ public:
     }
     std::string get_events_json(std::string hash_worker)
     {
+        server_log->log("group_clients|get_events_json","START FUNCTION\n");
         scope_lock_mutex s_cl(&mt_client);
         scope_lock_mutex s_ev(&mt_event);
         
@@ -437,6 +558,7 @@ private:
     
     std::string gethash()
     {
+        server_log->log("tasker_manager|gethash","START FUNCTION\n");
         time_t currentTime = time(nullptr);
         // std::cout<<"TIME: "<<currentTime<<"\n";
         std::string hash = sha256(std::to_string(currentTime));
@@ -447,7 +569,7 @@ public:
     std::string name_server="tasker";
     tasker_manager()
     {
-        
+        server_log->log("tasker_manager|tasker_manager","START FUNCTION\n");
         scope_lock_mutex s_mt(&mt);
         
         server_hash = gethash();
@@ -457,9 +579,11 @@ public:
 
     ~tasker_manager()
     {
+        server_log->log("tasker_manager|~tasker_manager","START FUNCTION\n");
     }
     int find_group(std::string group)
     {
+        server_log->log("tasker_manager|find_group","START FUNCTION\n");
         scope_lock_mutex s_mt(&mt);
         
         for (int i = 0; i < clients_group.size(); i++)
@@ -475,6 +599,7 @@ public:
     }
     std::string get_server_hash()
     {
+        server_log->log("tasker_manager|get_server_hash","START FUNCTION\n");
         scope_lock_mutex s_mt(&mt);
         
         std::string sr=server_hash;
@@ -483,6 +608,7 @@ public:
     }
     client get_new_client(std::string time, std::string ip, std::string group)
     {
+        server_log->log("tasker_manager|get_new_client","START FUNCTION\n");
         scope_lock_mutex s_mt(&mt);
         client cl;
         for (int i = 0; i < clients_group.size(); i++)
@@ -504,6 +630,7 @@ public:
     }
     void exit_client(std::string hash_worker, std::string group)
     {
+        server_log->log("tasker_manager|exit_client","START FUNCTION\n");
         scope_lock_mutex s_mt(&mt);
        
         int index = find_group(group);
@@ -513,6 +640,7 @@ public:
     }
     std::string get_events_json(std::string group, std::string hash_worker)
     {
+        server_log->log("tasker_manager|get_events_json","START FUNCTION\n");
        scope_lock_mutex s_mt(&mt);
         std::string ev;
         //last_check_client=time(nullptr);
@@ -536,6 +664,7 @@ public:
     }
     t_json start_event(std::string group,std::string hash_worker, std::string event_id)
     {
+        server_log->log("tasker_manager|start_event","START FUNCTION\n");
         scope_lock_mutex s_mt(&mt);
         
         t_json res;
@@ -551,6 +680,7 @@ public:
     }
      t_json clear_event(std::string group,std::string hash_worker, std::string event_id)
     {
+        server_log->log("tasker_manager|clear_event","START FUNCTION\n");
         scope_lock_mutex s_mt(&mt);
         t_json res;
         res["$status"] = -1;
@@ -565,6 +695,7 @@ public:
     }
     t_json end_event(std::string group, std::string event_id)
     {
+        server_log->log("tasker_manager|end_event","START FUNCTION\n");
         scope_lock_mutex s_mt(&mt);
         
         t_json res;
@@ -580,6 +711,7 @@ public:
     }
     int add_new_event(event ev)
     {
+        server_log->log("tasker_manager|add_new_event","START FUNCTION\n");
         scope_lock_mutex s_mt(&mt);
         
 
