@@ -2,14 +2,14 @@
 // };
 void server::mutex_n::lock() {
   if (n == 0) {
-    std::cout<<"LOCK\n";
+   
     mt.lock();
   } 
   n++;
 }
 void server::mutex_n::unlock() {
   if (n == 1) {
-    std::cout<<"UNCLOCK\n";
+    
     mt.unlock();
   }
   if (n != 0)
