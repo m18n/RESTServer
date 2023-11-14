@@ -615,8 +615,8 @@ public:
                     ev.json["meta"]["$server_hash"] = server_hash;
                 }
             }
-           
-            return clients_group[index].add_new_event(ev, server_hash);
+            int res=clients_group[index].add_new_event(ev, server_hash);
+            return res;
         }
       
         return -1;
