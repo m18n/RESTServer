@@ -191,8 +191,9 @@ public:
                         events[j].process=false;
                     }
                 }
-                mt_event.unlock();
                 init_client(&clients[i]);
+                mt_event.unlock();
+                
                 break;
             }
         }
@@ -256,7 +257,6 @@ public:
                 return 0;
             }
         }
-        mt_client.unlock();
         mt_event.unlock();
         return -2;
     }
