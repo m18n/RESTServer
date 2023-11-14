@@ -108,14 +108,32 @@ public:
         ids.resize(100);
         
     }
-      group_clients(const group_clients& other)
+      group_clients( group_clients& other)
     {
-        // Implement the copy constructor logic here
+        scope_lock_mutex s_cl(&other.mt_client);
+        scope_lock_mutex s_ev(&other.mt_event);
+        scope_lock_mutex s_ri(&other.mt_respon_id);
+        scope_lock_mutex s_var(&other.mt_var);
+        clients=other.clients;
+        events=other.events;
+        ids=other.ids;
+        group=other.group;
+        server_hash=server_hash;
     }
 
     // Move constructor
     group_clients(group_clients&& other) noexcept
     {
+        scope_lock_mutex s_cl(&other.mt_client);
+        scope_lock_mutex s_ev(&other.mt_event);
+        scope_lock_mutex s_ri(&other.mt_respon_id);
+        scope_lock_mutex s_var(&other.mt_var);
+        clients=std::move(other.clients);
+        events=std::move(other.events);
+        ids=std::move(other.ids);
+        group=std::move(other.group);
+        server_hash=std::move(server_hash);
+        
         // Implement the move constructor logic here
     }
 private:
