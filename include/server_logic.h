@@ -1,6 +1,6 @@
 #pragma once
 #include"tasker_manager.h"
-#include"../connector_manager/include/connector_manager.h"
+#include"connector_manager.h"
 namespace server{
 extern tasker_manager* tm_local;
 void handle_transfer(connector::connector_manager* conn_m,t_json json);
