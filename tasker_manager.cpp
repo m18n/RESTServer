@@ -137,29 +137,29 @@ server::client server::group_clients::get_new_client(std::string hash_worker) {
 
   return cl;
 }
-void server::group_clients::exit_client(std::string hash_worker) {
-  server_log->log("group_clients|exit_client", "START FUNCTION\n");
-  scope_lock_mutex s_cl(&mt_client);
+// void server::group_clients::exit_client(std::string hash_worker) {
+//   server_log->log("group_clients|exit_client", "START FUNCTION\n");
+//   scope_lock_mutex s_cl(&mt_client);
 
-  for (int i = 0; i < clients.size(); i++) {
-    if (clients[i].hash_worker == hash_worker) {
-      scope_lock_mutex s_ev(&mt_event);
+//   for (int i = 0; i < clients.size(); i++) {
+//     if (clients[i].hash_worker == hash_worker) {
+//       scope_lock_mutex s_ev(&mt_event);
 
-      for (int j = 0; j < events.size(); j++) {
-        if (events[j].process == true && events[j].hash_worker == hash_worker) {
-          events[j].hash_worker = "";
-          events[j].count_restart++;
-          events[j].hash_event = generate_hash_event(
-              std::to_string(j), std::to_string(events[j].count_restart));
-          events[j].process = false;
-        }
-      }
-      init_client(&clients[i]);
+//       for (int j = 0; j < events.size(); j++) {
+//         if (events[j].process == true && events[j].hash_worker == hash_worker) {
+//           events[j].hash_worker = "";
+//           events[j].count_restart++;
+//           events[j].hash_event = generate_hash_event(
+//               std::to_string(j), std::to_string(events[j].count_restart));
+//           events[j].process = false;
+//         }
+//       }
+//       init_client(&clients[i]);
 
-      break;
-    }
-  }
-}
+//       break;
+//     }
+//   }
+// }
 int server::group_clients::start_event(std::string hash_worker,
                                        std::string event_id) {
   server_log->log("group_clients|start_event", "START FUNCTION\n");
@@ -187,9 +187,14 @@ int server::group_clients::clear_event(std::string hash_worker,
   if(!check_client(hash_worker)){
     get_new_client(hash_worker);
   }
+  std::string strindex;
   for (int i = 0; i < events.size(); i++) {
     if (events[i].hash_event == event_id) {
       if (events[i].process == true) {
+        events[i].count_restart++;
+        strindex = std::to_string(i);
+        events[i].hash_event =
+          generate_hash_event(strindex, std::to_string(events[i].count_restart));
         events[i].process = false;
       }
 
@@ -229,13 +234,10 @@ if(!check_client(hash_worker)){
   ev.busy = true;
   for (int i = 0; i < events.size(); i++) {
     if (events[i].busy == false) {
+       strindex = std::to_string(i);
       ev.hash_event =
           generate_hash_event(strindex, std::to_string(ev.count_restart));
       events[i] = ev;
-      strindex = std::to_string(i);
-
-      if (ev.json["meta"]["$type_event"] == "req")
-        return ev.json["meta"]["$respon_id"];
       return 0;
     }
   }
@@ -244,24 +246,10 @@ if(!check_client(hash_worker)){
       generate_hash_event(strindex, std::to_string(ev.count_restart));
   events.push_back(ev);
 
-  if (ev.json["meta"]["$type_event"] == "req")
-    return ev.json["meta"]["$respon_id"];
+  
   return 0;
 }
-void server::group_clients::ping_client() {
-  server_log->log("group_clients|ping_client", "START FUNCTION\n");
-  scope_lock_mutex s_cl(&mt_client);
 
-  for (int i = 0; i < clients.size(); i++) {
-    if (clients[i].busy == true) {
-      if (clients[i].last_update == false) {
-        exit_client(clients[i].hash_worker);
-      } else {
-        clients[i].last_update = false;
-      }
-    }
-  }
-}
 std::string server::group_clients::get_events_json(std::string hash_worker) {
   server_log->log("group_clients|get_events_json", "START FUNCTION\n");
   scope_lock_mutex s_cl(&mt_client);
@@ -354,31 +342,19 @@ server::client server::tasker_manager::get_new_client(std::string hash_worker,
 
   return cl;
 }
-void server::tasker_manager::exit_client(std::string hash_worker,
-                                         std::string group) {
-  server_log->log("tasker_manager|exit_client", "START FUNCTION\n");
-  scope_lock_mutex s_mt(&mt);
-
-  int index = find_group(group);
-  if (index != -1)
-    clients_group[index].exit_client(hash_worker);
-}
 std::string server::tasker_manager::get_events_json(std::string group,
                                                     std::string hash_worker) {
   server_log->log("tasker_manager|get_events_json", "START FUNCTION\n");
   scope_lock_mutex s_mt(&mt);
   std::string ev;
-  // last_check_client=time(nullptr);
-  time_t currentTime = time(nullptr);
-  time_t del = currentTime - last_check_client;
-  if (del == 10) {
-    for (int i = 0; i < clients_group.size(); i++) {
-      clients_group[i].ping_client();
-    }
-    last_check_client = time(nullptr);
-  }
-
   int index = find_group(group);
+  if (index == -1) {
+    group_clients gr;
+    gr.set_group(group);
+    gr.init(server_hash);
+    clients_group.push_back(std::move(gr));
+    index = clients_group.size() - 1;
+  }
   ev = clients_group[index].get_events_json(hash_worker);
 
   if (index != -1)
@@ -454,6 +430,9 @@ int server::tasker_manager::add_new_event(std::string hash_worker, event ev) {
     gr.init(server_hash);
     clients_group.push_back(std::move(gr));
     index = clients_group.size() - 1;
+  }
+  if(!ev.json["meta"].contains("$respon_id")){
+    return -1;
   }
   ev.json["meta"]["$server_hash"] = server_hash;
   int res = clients_group[index].add_new_event(hash_worker, ev);

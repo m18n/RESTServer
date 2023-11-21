@@ -240,12 +240,11 @@ class group_clients {
   void init(std::string server_hash);
   std::string get_group();
   client get_new_client(std::string hash_worker);
-  void exit_client(std::string hash_worker);
+  //void exit_client(std::string hash_worker);
   int start_event(std::string hash_worker,std::string event_id);
   int clear_event(std::string hash_worker,std::string event_id);
   int end_event(std::string hash_worker,std::string event_id);
   int add_new_event(std::string hash_worker,event ev);
-  void ping_client();
   std::string get_events_json(std::string hash_worker);
 
  private:
@@ -279,7 +278,7 @@ class tasker_manager {
   int find_group(std::string group);
   std::string get_server_hash();
   client get_new_client(std::string hash_worker, std::string group);
-  void exit_client(std::string hash_worker, std::string group);
+  
   std::string get_events_json(std::string group, std::string hash_worker);
   t_json start_event(std::string group,
                      std::string hash_worker,
