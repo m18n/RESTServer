@@ -58,45 +58,11 @@ int number=0;
 };
 class mutex_n {
 private:
-int check_thread(){
-  for(int i=0;i<ids.size();i++){
-    if(ids[i].threadid==std::this_thread::get_id()){
-
-      return i;
-    }
-  }
-  ident_mute id;
-  id.threadid=std::this_thread::get_id();
-  ids.push_back(id);
-  return ids.size()-1;
-}
+int check_thread();
  public:
   mutex_n() = default;
-  void lock() {
-    my.lock();
-    int index=check_thread();
-    if (ids[index].number== 0) {
-      my.unlock();
-      mt.lock();
-      my.lock();
-    }
-    ids[index].number++;
-    my.unlock();
-  }
-  void unlock() {
-    
-    
-    my.lock();
-    int index=check_thread();
-    if (ids[index].number == 1) {
-      my.unlock();
-      mt.unlock();
-      my.lock();
-    }
-    if (ids[index].number != 0)
-      ids[index].number--;
-    my.unlock();
-  }
+  void lock();
+  void unlock();
 
  private:
  std::vector<ident_mute> ids;

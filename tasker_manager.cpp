@@ -5,18 +5,40 @@ server::Logger* server::server_log = &serv_log_empty;
 void server::init_logg_server(Logger* log) {
   server_log = log;
 }
-void server::mutex_n::lock() {
-  if (n == 0) {
-    mt.lock();
+int server::mutex_n::check_thread(){
+  for(int i=0;i<ids.size();i++){
+    if(ids[i].threadid==std::this_thread::get_id()){
+
+      return i;
+    }
   }
-  n++;
+  ident_mute id;
+  id.threadid=std::this_thread::get_id();
+  ids.push_back(id);
+  return ids.size()-1;
+}
+void server::mutex_n::lock() {
+  my.lock();
+    int index=check_thread();
+    if (ids[index].number== 0) {
+      my.unlock();
+      mt.lock();
+      my.lock();
+    }
+    ids[index].number++;
+    my.unlock();
 }
 void server::mutex_n::unlock() {
-  if (n == 1) {
-    mt.unlock();
-  }
-  if (n != 0)
-    n--;
+  my.lock();
+    int index=check_thread();
+    if (ids[index].number == 1) {
+      my.unlock();
+      mt.unlock();
+      my.lock();
+    }
+    if (ids[index].number != 0)
+      ids[index].number--;
+    my.unlock();
 }
 bool server::isPortOccupied(int port) {
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
