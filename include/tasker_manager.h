@@ -11,6 +11,7 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 #include <vector>
+#include<thread>
 namespace server {
 using t_json = nlohmann::json;
 
@@ -51,15 +52,57 @@ struct event {
 void init_event(event* ev);
 
 
+struct ident_mute{
+std::thread::id threadid;
+int number=0;
+};
 class mutex_n {
+private:
+int check_thread(){
+  for(int i=0;i<ids.size();i++){
+    if(ids[i].threadid==std::this_thread::get_id()){
+
+      return i;
+    }
+  }
+  ident_mute id;
+  id.threadid=std::this_thread::get_id();
+  ids.push_back(id);
+  return ids.size()-1;
+}
  public:
   mutex_n() = default;
-  void lock();
-  void unlock();
+  void lock() {
+    my.lock();
+    int index=check_thread();
+    if (ids[index].number== 0) {
+      my.unlock();
+      mt.lock();
+      my.lock();
+    }
+    ids[index].number++;
+    my.unlock();
+  }
+  void unlock() {
+    
+    
+    my.lock();
+    int index=check_thread();
+    if (ids[index].number == 1) {
+      my.unlock();
+      mt.unlock();
+      my.lock();
+    }
+    if (ids[index].number != 0)
+      ids[index].number--;
+    my.unlock();
+  }
 
  private:
+ std::vector<ident_mute> ids;
   int n = 0;
   std::mutex mt;
+  std::mutex my;
 };
 class scope_lock_mutex {
  public:

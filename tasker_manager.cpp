@@ -261,12 +261,6 @@ std::string server::group_clients::get_events_json(std::string hash_worker) {
 
   respon.resize(0);
   int cap = respon.capacity();
-  for (int i = 0; i < clients.size(); i++) {
-    if (clients[i].hash_worker == hash_worker) {
-      clients[i].last_update = true;
-      break;
-    }
-  }
 
   t_json json_id;
   json_id["id"] = "0";
